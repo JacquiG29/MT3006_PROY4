@@ -1,0 +1,43 @@
+#VRML_SIM R2020a utf8
+WorldInfo {
+}
+Viewpoint {
+  orientation -0.9993062441261331 0.029361512021767063 0.022911395905026537 0.974820519955974
+  position 0.6309200370019323 9.96758138413589 6.887091934296228
+}
+TexturedBackground {
+}
+TexturedBackgroundLight {
+}
+RectangleArena {
+  floorSize 10 10
+  floorTileSize 1 1
+}
+Pioneer3dx {
+  translation -0.24 0.0975 -2.15
+  name "Pioneer 3-DX(5)"
+  controller "controlador_lider"
+}
+Pioneer3dx {
+  controller "controlador_seguidor"
+}
+Pioneer3dx {
+  translation 0.71 0.0975 0.1
+  name "Pioneer 3-DX(1)"
+  controller "controlador_seguidor"
+}
+Pioneer3dx {
+  translation -0.98 0.0975 1.02
+  name "Pioneer 3-DX(2)"
+  controller "controlador_seguidor"
+}
+Pioneer3dx {
+  translation -1.58 0.0975 0.2
+  name "Pioneer 3-DX(3)"
+  controller "controlador_seguidor"
+}
+Pioneer3dx {
+  translation 0.3 0.0975 1.27
+  name "Pioneer 3-DX(4)"
+  controller "controlador_seguidor"
+}
