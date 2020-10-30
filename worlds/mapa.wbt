@@ -2,8 +2,8 @@
 WorldInfo {
 }
 Viewpoint {
-  orientation -0.9993062441261331 0.029361512021767063 0.022911395905026537 0.974820519955974
-  position 0.6309200370019323 9.96758138413589 6.887091934296228
+  orientation 0.9999835101836984 0.005170061969584522 0.002499963983719982 5.3823760551366595
+  position 0.8467634009780421 10.97191959700354 9.692598320718224
 }
 TexturedBackground {
 }
@@ -12,32 +12,41 @@ TexturedBackgroundLight {
 RectangleArena {
   floorSize 10 10
   floorTileSize 1 1
+  wallHeight 0.5
 }
 Pioneer3dx {
-  translation -0.24 0.0975 -2.15
+  translation 4 0.0975 0
+  rotation 0 1 0 3.14159
   name "Pioneer 3-DX(5)"
   controller "controlador_lider"
+  extensionSlot [
+    Compass {
+    }
+    GPS {
+    }
+  ]
 }
 Pioneer3dx {
+  translation -2.33 0.0975 0.18
   controller "controlador_seguidor"
 }
 Pioneer3dx {
-  translation 0.71 0.0975 0.1
+  translation 1.23 0.0975 4.6
   name "Pioneer 3-DX(1)"
-  controller "controlador_seguidor"
+  controller ""
 }
 Pioneer3dx {
-  translation -0.98 0.0975 1.02
+  translation -0.72 0.0975 4.48
   name "Pioneer 3-DX(2)"
-  controller "controlador_seguidor"
+  controller ""
 }
 Pioneer3dx {
-  translation -1.58 0.0975 0.2
+  translation -3.93 0.0975 4.27
   name "Pioneer 3-DX(3)"
-  controller "controlador_seguidor"
+  controller ""
 }
 Pioneer3dx {
-  translation 0.3 0.0975 1.27
+  translation 0.3 0.0975 4.59
   name "Pioneer 3-DX(4)"
-  controller "controlador_seguidor"
+  controller ""
 }
