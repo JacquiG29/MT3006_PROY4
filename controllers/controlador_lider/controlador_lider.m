@@ -6,7 +6,7 @@
 %% Activar debugging
 % uncomment the next two lines if you want to use
 % MATLAB's desktop to interact with the controller:
-desktop;
+%desktop;
 %keyboard;
 
 %% Parï¿½metros de Webots
@@ -42,25 +42,11 @@ wb_motor_set_velocity(right_wheel, 0.0);
 wb_gps_enable(position_sensor, TIME_STEP);
 wb_compass_enable(orientation_sensor, TIME_STEP);
 
-% get and enable all distance sensors
-sonar = zeros(MAX_SENSOR_NUMBER, 1);
-for k = 1:MAX_SENSOR_NUMBER
-    sonar(k) = wb_robot_get_device(strcat('so', num2str(k - 1)));
-    wb_distance_sensor_enable(sonar(k), time_step);
-end
-
-sensor_values = zeros(1, MAX_SENSOR_NUMBER);
 %% Variables de PID
 controlador = 1;
 xi = 0;
 zi = 0;
 
-% PID posiciï¿½n
-kpP = 10;%10 funciona bien para acercamiento exp
-kiP = 0.0001;
-kdP = 0;
-EP = 0;
-eP_1 = 0;
 
 % PID orientaciï¿½n
 kpO = 2;
@@ -81,10 +67,6 @@ while wb_robot_step(TIME_STEP) ~= -1
     xg = 4*cos(0.001*2*pi*n);
     zg = 4*sin(0.001*2*pi*n);
     
-    %Lectura de todos los sensores de distancia
-    for k = 1:MAX_SENSOR_NUMBER
-        sensor_values(k) = wb_distance_sensor_get_value(sonar(k));
-    end
     %Lectura de posiciï¿½n angular
     north = wb_compass_get_values(orientation_sensor);
     rad = atan2(north(1, 1), north(1, 3));
@@ -112,8 +94,9 @@ while wb_robot_step(TIME_STEP) ~= -1
         w = kpO*eO + kiO*EO + kdO*eO_D;
         eO_1 = eO;
         
-        formatSpec = 'xg: %.2f zg: %.2f  xi: %.2f zi: %.2f\n';
-        fprintf(formatSpec, xg, zg, xi, zi);
+        %formatSpec = 'xg: %.2f zg: %.2f  xi: %.2f zi: %.2f\n';
+        %fprintf(formatSpec, xg, zg, xi, zi);
+        
         % Asignaciï¿½n de controladores a velocidad de llantas
         left_speed = (v - w*DISTANCE_FROM_CENTER)/WHEEL_RADIUS;
         right_speed = (v + w*DISTANCE_FROM_CENTER)/WHEEL_RADIUS;

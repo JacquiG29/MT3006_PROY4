@@ -2,8 +2,8 @@
 WorldInfo {
 }
 Viewpoint {
-  orientation 0.9999835101836984 0.005170061969584522 0.002499963983719982 5.3823760551366595
-  position 0.8467634009780421 10.97191959700354 9.692598320718224
+  orientation 0.9999708650541244 -0.006648851817061998 -0.0037499083216643854 5.256114046885585
+  position 0.8887018579044631 12.260980646240261 8.722151660240298
 }
 TexturedBackground {
 }
@@ -27,26 +27,10 @@ Pioneer3dx {
   ]
 }
 Pioneer3dx {
-  translation -2.33 0.0975 0.18
+  translation 0.71 0.0975 4.3
   controller "controlador_seguidor"
-}
-Pioneer3dx {
-  translation 1.23 0.0975 4.6
-  name "Pioneer 3-DX(1)"
-  controller ""
-}
-Pioneer3dx {
-  translation -0.72 0.0975 4.48
-  name "Pioneer 3-DX(2)"
-  controller ""
-}
-Pioneer3dx {
-  translation -3.93 0.0975 4.27
-  name "Pioneer 3-DX(3)"
-  controller ""
-}
-Pioneer3dx {
-  translation 0.3 0.0975 4.59
-  name "Pioneer 3-DX(4)"
-  controller ""
+  extensionSlot [
+    Compass {
+    }
+  ]
 }
