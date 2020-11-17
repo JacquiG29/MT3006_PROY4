@@ -100,13 +100,23 @@ while wb_robot_step(TIME_STEP) ~= -1
         % Asignaciï¿½n de controladores a velocidad de llantas
         left_speed = (v - w*DISTANCE_FROM_CENTER)/WHEEL_RADIUS;
         right_speed = (v + w*DISTANCE_FROM_CENTER)/WHEEL_RADIUS;
+        speed = [left_speed, right_speed];
     
     end
     
-    % send actuator commands, e.g.:
-    wb_motor_set_velocity(left_wheel, left_speed);
-    wb_motor_set_velocity(right_wheel, right_speed);
+   for k = 1:2
+       if speed(k) < -max_speed
+           speed(k) = -max_speed;
+        elseif speed(k) > max_speed
+           speed(k) = max_speed;
+         end
+    end
     
+    left_speed = speed(1, 1);
+    right_speed = speed(1, 2);
+    
+    wb_motor_set_velocity(left_wheel,speed(1, 1));
+    wb_motor_set_velocity(right_wheel, speed(1, 2));
     % if your code plots some graphics, it needs to flushed like this:
     drawnow;
     

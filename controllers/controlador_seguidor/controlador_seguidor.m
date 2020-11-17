@@ -11,7 +11,7 @@
 
 %% Par�metros de Webots
 TIME_STEP = 64;
-MAX_SPEED = 5.24;
+MAX_SPEED = 4;
 MAX_SENSOR_NUMBER = 8;
 WHEEL_RADIUS = (195 / 2000.0);
 DISTANCE_FROM_CENTER = (381 / 2000.0);
@@ -19,7 +19,7 @@ MAX_SENSOR_VALUE = 1024;
 range = MAX_SENSOR_VALUE / 2;
 max_speed = 5.24;
 SPEED_UNIT = max_speed / 1024;
-MIN_DISTANCE = 1;
+MIN_DISTANCE = 0.5;
 WHEEL_WEIGHT_THRESHOLD = 100;
 
 %Matriz de pesos de sensores de braitenberg
@@ -88,6 +88,24 @@ angulo=[3.14159;2.44346;2.0944;1.74533;1.39626;1.0472;0.698132;0];%angulo de rot
 sensor_values = zeros(1, MAX_SENSOR_NUMBER);
 
 ui=zeros(2,MAX_SENSOR_NUMBER);
+
+%PID
+g=zeros(2,1);
+g_1=zeros(2,1);
+ 
+xi = 0;
+zi = 0;
+
+
+% PID orientaciï¿½n
+kpO = 5;
+kiO = 0.0001;
+kdO = 0;
+EO = 0;
+eO_1 = 0;
+
+alpha = 0.5;
+
 while wb_robot_step(TIME_STEP) ~= -1
     
     %Lectura de posicion angular
@@ -102,7 +120,7 @@ while wb_robot_step(TIME_STEP) ~= -1
     %calculo de la distancia
     distance =  5 * (1.0 - (sensor_values / MAX_SENSOR_VALUE));
     
-    for k = 1:MAX_SENSOR_NUMBER
+    for k = 3:6
         if distance(k) < MIN_DISTANCE
             controlador = 2;
         end
@@ -116,7 +134,7 @@ while wb_robot_step(TIME_STEP) ~= -1
         M_lo=[1     0;
               0  (1/lo)];
         
-          for n = 1:MAX_SENSOR_NUMBER
+          for n = 3:6
           
               wij=0.015*sinh(15*distance(n)-2)/distance(n);%funcion de energia
               
@@ -136,29 +154,66 @@ while wb_robot_step(TIME_STEP) ~= -1
               
               ui(:,n)=wij*ixj;%velocidades de ecuacion de consenso
               %duda con este signo
+              x = ixj_hat(3,1); 
+              z = ixj_hat(1,1);
           end
           
-        vel=M_lo*inv(IRB)*(mean(ui,2));
+        %vel=M_lo*inv(IRB)*(sum(ui,2));
+        vel=(sum(ui,2));
         
-        v=vel(1,1);
-        w=vel(2,1);
+        g=g_1 + vel*TIME_STEP*1^(-3);
+        g_1=g;
+        
+        xg=vel(1,1);
+        zg=vel(2,1);
+        
+        e = [xg - x; zg - z];
+        thetag = atan2(e(2), e(1));
+        
+        eP = norm(e);
+        eO = thetag - theta;
+        eO = atan2(sin(eO), cos(eO));
+        
+        % Control de velocidad lineal
+        keP = MAX_SPEED * (1-exp(-alpha*eP^2)) / eP;
+        v = keP*eP;
+        
+        % Control de velocidad angular
+        eO_D = eO - eO_1;
+        EO = EO + eO;
+        w = kpO*eO + kiO*EO + kdO*eO_D;
+        eO_1 = eO;
+        
+        %formatSpec = 'xg: %.2f zg: %.2f  xi: %.2f zi: %.2f\n';
+        %fprintf(formatSpec, xg, zg, xi, zi);
         
         % Asignaciï¿½n de controladores a velocidad de llantas
         left_speed = (v - w*DISTANCE_FROM_CENTER)/WHEEL_RADIUS;
         right_speed = (v + w*DISTANCE_FROM_CENTER)/WHEEL_RADIUS;
+        speed = [left_speed, right_speed];
         
         formatSpec = 'v: %.2f w: %.2f  left_speed: %.2f right_speed: %.2f distancia: %.2f\n';
-        fprintf(formatSpec, v, w, left_speed, right_speed,distance);
+        wb_console_print(sprintf(formatSpec, v, w, left_speed, right_speed,distance),WB_STDOUT)
+
         
     elseif controlador == 3
         left_speed = 0;
         right_speed = 0;
-        
+        speed = [left_speed, right_speed];        
     end
     
+
+   for k = 1:2
+       if speed(k) < -max_speed
+           speed(k) = -max_speed;
+        elseif speed(k) > max_speed
+           speed(k) = max_speed;
+         end
+    end
+
     
-    wb_motor_set_velocity(left_wheel, left_speed);
-    wb_motor_set_velocity(right_wheel, right_speed);
+    wb_motor_set_velocity(left_wheel,speed(1, 1));
+    wb_motor_set_velocity(right_wheel, speed(1, 2));
     
     drawnow;
     
