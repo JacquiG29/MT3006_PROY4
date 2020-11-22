@@ -11,7 +11,7 @@
 
 %% Par�metros de Webots
 TIME_STEP = 64;
-MAX_SPEED = 4;
+MAX_SPEED = 5.24;
 MAX_SENSOR_NUMBER = 8;
 WHEEL_RADIUS = (195 / 2000.0);
 DISTANCE_FROM_CENTER = (381 / 2000.0);
@@ -19,27 +19,8 @@ MAX_SENSOR_VALUE = 1024;
 range = MAX_SENSOR_VALUE / 2;
 max_speed = 5.24;
 SPEED_UNIT = max_speed / 1024;
-MIN_DISTANCE = 0.5;
+MIN_DISTANCE = 1;
 WHEEL_WEIGHT_THRESHOLD = 100;
-
-%Matriz de pesos de sensores de braitenberg
-braitenberg_matrix = [
-    150 0;
-    200, 0;
-    300, 0;
-    600, 0;
-    0, 600;
-    0, 300;
-    0, 200;
-    0, 150;
-    0, 0;
-    0, 0;
-    0, 0;
-    0, 0;
-    0, 0;
-    0, 0;
-    0, 0;
-    0, 0 ];
 
 %% Webots - Enable Devices
 % Device IDs
@@ -67,7 +48,7 @@ end
 %Variables para braitenberg
 speed = zeros(1,2);
 state = "f";
-controlador = 3;
+controlador = 1;
 
 %Distancia al nuevo punto cercano
 lo=0.001;
@@ -76,36 +57,36 @@ vel=[0;0];
 
 %vector de posici�n
 iOs=[ -0.140208, 0.114, -0.0610447; %so0
-      -0.122255,  0.114, -0.110288; %so1
-      -0.0801434, 0.114, -0.145492; %so2
-      -0.0285304, 0.114, -0.16417;  %so3
-       0.026383,  0.114, -0.16417;  %so4
-       0.0780296, 0.114, -0.145492; %so5
-       0.120142,  0.114, -0.110288; %so6
-       0.138094,  0.114, -0.0610446];%so7
+    -0.122255,  0.114, -0.110288; %so1
+    -0.0801434, 0.114, -0.145492; %so2
+    -0.0285304, 0.114, -0.16417;  %so3
+    0.026383,  0.114, -0.16417;  %so4
+    0.0780296, 0.114, -0.145492; %so5
+    0.120142,  0.114, -0.110288; %so6
+    0.138094,  0.114, -0.0610446];%so7
 
 angulo=[3.14159;2.44346;2.0944;1.74533;1.39626;1.0472;0.698132;0];%angulo de rot de so0 a so7
 sensor_values = zeros(1, MAX_SENSOR_NUMBER);
 
-ui=zeros(2,MAX_SENSOR_NUMBER);
-
+%ui=zeros(2,MAX_SENSOR_NUMBER);
+vi = [0; 0];
 %PID
 g=zeros(2,1);
 g_1=zeros(2,1);
- 
+
 xi = 0;
 zi = 0;
 
 
 % PID orientaciï¿½n
-kpO = 5;
+kpO = 15;
 kiO = 0.0001;
 kdO = 0;
 EO = 0;
 eO_1 = 0;
 
-alpha = 0.5;
-
+alpha = 1.2;
+distancia_vec=zeros(MAX_SENSOR_NUMBER,1);
 while wb_robot_step(TIME_STEP) ~= -1
     
     %Lectura de posicion angular
@@ -114,69 +95,102 @@ while wb_robot_step(TIME_STEP) ~= -1
     
     wheel_weight_total = zeros(1, 2);
     %Lectura de todos los sensores delanteros
-    for k = 1:MAX_SENSOR_NUMBER
+    for k = 1:8
         sensor_values(k) = wb_distance_sensor_get_value(sonar(k));
     end
-    %calculo de la distancia
-    distance =  5 * (1.0 - (sensor_values / MAX_SENSOR_VALUE));
+    distance = 5*(1 - (sensor_values/1024)); %valores de sensores pasan a distancias, en m.
+    [~, ind_xi_xj] = sort(distance); %ordenar distancias de menor a mayor, obtener índices
+    dist_values_in_range = distance ((distance  <= 3));
     
-    for k = 3:6
-        if distance(k) < MIN_DISTANCE
-            controlador = 2;
-        end
+%     A=find(sensor_values);
+%     
+%     
+%     for i = 1:numel(A)
+%         dist_val=A;
+%         distance(i) = 5.0 * (1 - (sensor_values(dist_val(i)) / 1024));
+%     end
+    
+    %NECESITO QUE SI EL SENSOR NO LEA NADA NO ME AFECTE A LA DISTANCIA
+    %EXCLUIR VALORES PARA LOS CUALES SENSOR VALUE ES 0 O LA DISTANCIA ES IGUAL
+    %A 5
+    %distance=distancia_vec;
+    
+    if (isempty(dist_values_in_range))
+        controlador = 1;
+    else
+        controlador = 2;
     end
     
-    
-    if controlador == 2
+   
+    if controlador==1
+        left_speed = 0;
+        right_speed = 0;
+        speed = [left_speed, right_speed];
+        
+    elseif controlador==2
         IRB = [cos(theta)  -sin(theta);
-               sin(theta)   cos(theta)];
+            sin(theta)   cos(theta)];
         
         M_lo=[1     0;
-              0  (1/lo)];
+            0  (1/lo)];
         
-          for n = 3:6
-          
-              wij=0.015*sinh(15*distance(n)-2)/distance(n);%funcion de energia
-              
-              %wij=(distance(n)-dij)/distance(n);
-              
-              iRs=[ cos(angulo(n))   0   sin(angulo(n));
-                                 0   1                0;
-                   -sin(angulo(n))   0   cos(angulo(n))];%matriz de rotación
-              
-              iTs=[iRs,iOs(n,:)';0,0,0,1];%matriz de transforamción a centro del robot
-              
-              sxj=[distance(n);0;0;1];%vector respecto a marco de ref Si
-              
-              ixj_hat=iTs*sxj;%xj-xi
-              
-              ixj=[ixj_hat(3,1);ixj_hat(1,1)];%seleccion de coordenada x y z
-              
-              ui(:,n)=wij*ixj;%velocidades de ecuacion de consenso
-              %duda con este signo
-              x = ixj_hat(3,1); 
-              z = ixj_hat(1,1);
-          end
-          
+        ind_xi_xj = ind_xi_xj(1);
+        norm_xi_xj = distance(ind_xi_xj);
+        
+        wb_console_print(sprintf('ind = %f', ind_xi_xj), WB_STDOUT);
+        wb_console_print(sprintf('norm = %f', norm_xi_xj), WB_STDOUT);
+        
+        neighbors = numel(norm_xi_xj);
+        
+        for n = 1:neighbors
+            %dist_val=A;
+            %n=dist_val(i)
+            %wij=0.015*sinh(15*distance(n)-8)/distance(n);%funcion de energia
+            %wij=1;
+            dij=1;
+            wij=(distance(n)-dij)/distance(n);
+            
+            iRs=[ cos(angulo(n))   0   sin(angulo(n));
+                0   1                0;
+                -sin(angulo(n))   0   cos(angulo(n))];%matriz de rotación
+            
+            iTs=[iRs,iOs(n,:)';0,0,0,1];%matriz de transforamción a centro del robot
+            
+            sxj=[distance(n);0;0;1];%vector respecto a marco de ref Si
+            
+            ixj_hat=iTs*sxj;%xj-xi
+            
+            ixj=[-ixj_hat(3,1);-ixj_hat(1,1)];%seleccion de coordenada x y z
+            
+            ui=wij*ixj;%velocidades de ecuacion de consenso
+            %duda con este signo
+            x = -ixj_hat(3,1);
+            z = -ixj_hat(1,1);
+        end
+        
         %vel=M_lo*inv(IRB)*(sum(ui,2));
-        vel=(sum(ui,2));
-        
-        g=g_1 + vel*TIME_STEP*1^(-3);
+        %vel=(sum(ui,2));
+        vel=ui;
+        g=vel.*TIME_STEP*1^(-3);
         g_1=g;
         
         xg=vel(1,1);
         zg=vel(2,1);
         
-        e = [xg - x; zg - z];
+        e = [x;z];
         thetag = atan2(e(2), e(1));
         
         eP = norm(e);
-        eO = thetag - theta;
+        eO = thetag;% - theta;
         eO = atan2(sin(eO), cos(eO));
         
         % Control de velocidad lineal
         keP = MAX_SPEED * (1-exp(-alpha*eP^2)) / eP;
         v = keP*eP;
+         
+        if (eP < 0.08)
+            v = 0.2;
+        end
         
         % Control de velocidad angular
         eO_D = eO - eO_1;
@@ -192,25 +206,22 @@ while wb_robot_step(TIME_STEP) ~= -1
         right_speed = (v + w*DISTANCE_FROM_CENTER)/WHEEL_RADIUS;
         speed = [left_speed, right_speed];
         
-        formatSpec = 'v: %.2f w: %.2f  left_speed: %.2f right_speed: %.2f distancia: %.2f\n';
-        wb_console_print(sprintf(formatSpec, v, w, left_speed, right_speed,distance),WB_STDOUT)
-
+        formatSpec = 'left_speed: %.2f right_speed: %.2f distancia: %.2f\n';
+        wb_console_print(sprintf(formatSpec,left_speed, right_speed,distance),WB_STDOUT)
         
-    elseif controlador == 3
-        left_speed = 0;
-        right_speed = 0;
-        speed = [left_speed, right_speed];        
     end
     
-
-   for k = 1:2
-       if speed(k) < -max_speed
-           speed(k) = -max_speed;
+    
+    wb_console_print(sprintf('Sensor: %.0f\n',sensor_values),WB_STDOUT)
+    
+    for k = 1:2
+        if speed(k) < -max_speed
+            speed(k) = -max_speed;
         elseif speed(k) > max_speed
-           speed(k) = max_speed;
-         end
+            speed(k) = max_speed;
+        end
     end
-
+    
     
     wb_motor_set_velocity(left_wheel,speed(1, 1));
     wb_motor_set_velocity(right_wheel, speed(1, 2));

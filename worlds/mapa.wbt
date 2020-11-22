@@ -2,8 +2,8 @@
 WorldInfo {
 }
 Viewpoint {
-  orientation 0.9968102200009772 -0.06682128928341637 -0.04363829281841177 5.123211811939308
-  position 2.311882164047902 9.282155660576931 5.286280079900792
+  orientation 0.9999860431295777 -0.0046544274050510075 -0.0024999703160933267 5.297377344247067
+  position 0.28665485079383984 9.166386898683502 7.258365298225991
 }
 TexturedBackground {
 }
@@ -12,7 +12,6 @@ TexturedBackgroundLight {
 RectangleArena {
   floorSize 10 10
   floorTileSize 1 1
-  wallHeight 0.5
 }
 Pioneer3dx {
   translation 4 0.0975 0
@@ -27,8 +26,8 @@ Pioneer3dx {
   ]
 }
 Pioneer3dx {
-  translation 2.76334 0.0975 1.93155
-  rotation 0 -0.9999999999999999 0 2.35619
+  translation 4.00601 0.0975 -0.649272
+  rotation 0 1 0 -3.1415853071795863
   controller "controlador_seguidor"
   extensionSlot [
     Compass {

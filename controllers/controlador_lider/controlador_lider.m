@@ -49,7 +49,7 @@ zi = 0;
 
 
 % PID orientaciï¿½n
-kpO = 2;
+kpO = 3;
 kiO = 0.0001;
 kdO = 0;
 EO = 0;
