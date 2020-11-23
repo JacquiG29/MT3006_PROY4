@@ -67,9 +67,9 @@ iOs=[ -0.140208, 0.114, -0.0610447; %so0
 
 angulo=[3.14159;2.44346;2.0944;1.74533;1.39626;1.0472;0.698132;0];%angulo de rot de so0 a so7
 sensor_values = zeros(1, MAX_SENSOR_NUMBER);
-ixj = zeros(2,MAX_SENSOR_NUMBER);
-ui=zeros(2,MAX_SENSOR_NUMBER);
-%vi = [0; 0];
+
+%ui=zeros(2,MAX_SENSOR_NUMBER);
+vi = [0; 0];
 %PID
 g=zeros(2,1);
 g_1=zeros(2,1);
@@ -79,13 +79,13 @@ zi = 0;
 
 
 % PID orientaciï¿½n
-kpO = 10;
+kpO = 15;
 kiO = 0.0001;
 kdO = 0;
 EO = 0;
 eO_1 = 0;
 
-alpha = 0.5;
+alpha = 1.2;
 distancia_vec=zeros(MAX_SENSOR_NUMBER,1);
 while wb_robot_step(TIME_STEP) ~= -1
     
@@ -104,8 +104,7 @@ while wb_robot_step(TIME_STEP) ~= -1
     end
     distance = 5*(1 - (sensor_values/1024)); %valores de sensores pasan a distancias, en m.
     [~, ind_xi_xj] = sort(distance); %ordenar distancias de menor a mayor, obtener índices
-    dist_values_in_range = distance ((distance  <= 3));%&(distance>DISTANCE_FROM_CENTER)
-    
+    dist_values_in_range = distance ((distance  <= 3));
     
 %     A=find(sensor_values);
 %     
@@ -123,6 +122,8 @@ while wb_robot_step(TIME_STEP) ~= -1
     if (isempty(dist_values_in_range))
         controlador = 1;
     else
+    
+    
         controlador = 2;
     end
     
@@ -139,7 +140,22 @@ while wb_robot_step(TIME_STEP) ~= -1
         M_lo=[1     0;
             0  (1/lo)];
         
-        for n = 1:MAX_SENSOR_NUMBER            
+        ind_xi_xj = ind_xi_xj(1);
+        norm_xi_xj = distance(ind_xi_xj);
+        
+        wb_console_print(sprintf('ind = %f', ind_xi_xj), WB_STDOUT);
+        wb_console_print(sprintf('norm = %f', norm_xi_xj), WB_STDOUT);
+        
+        neighbors = numel(norm_xi_xj);
+        
+        for n = 1:MAX_SENSOR_NUMBER
+            %dist_val=A;
+            %n=dist_val(i)
+            %wij=0.015*sinh(15*distance(n)-8)/distance(n);%funcion de energia
+            %wij=1;
+            dij=1;
+            wij=(distance(n)-dij)/distance(n);
+            
             iRs=[ cos(angulo(n))   0   sin(angulo(n));
                 0   1                0;
                 -sin(angulo(n))   0   cos(angulo(n))];%matriz de rotación
@@ -150,35 +166,22 @@ while wb_robot_step(TIME_STEP) ~= -1
             
             ixj_hat=iTs*sxj;%xj-xi
             
-            ixj(:,n)=[-ixj_hat(3,1);-ixj_hat(1,1)];%seleccion de coordenada x y z
+            ixj=[-ixj_hat(3,1);-ixj_hat(1,1)];%seleccion de coordenada x y z
             
-%             if distance(n) == 5
-%                 ixj(:,n) = [0 0]';
-%                 distance(n) = 0;
-%             end
-        end
-        %WHEEL_RADIUS
-        %tomar el valor del sensor que detecte el objeto más cercano.
-        ind_xi_xj = ind_xi_xj(1);
-        norm_xi_xj = distance(ind_xi_xj);
-        
-        neighbors = numel(norm_xi_xj);
-        for n = 1:numel(neighbors)
-            dij=1;
-            wij=(distance(n)-dij)/distance(n);
             ui=wij*ixj;%velocidades de ecuacion de consenso
             %duda con este signo
+            x = -ixj_hat(3,1);
+            z = -ixj_hat(1,1);
         end
+        
         %vel=M_lo*inv(IRB)*(sum(ui,2));
-        vel=(sum(ui,2));
-        %vel=ui;
+        %vel=(sum(ui,2));
+        vel=ui;
         g=vel.*TIME_STEP*1^(-3);
+        g_1=g;
         
         xg=vel(1,1);
         zg=vel(2,1);
-        
-        x = -ixj(1,1);
-        z = -ixj(2,1);
         
         e = [x;z];
         thetag = atan2(e(2), e(1));
